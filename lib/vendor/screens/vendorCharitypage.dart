@@ -1,9 +1,9 @@
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:awesome_notifications/awesome_notifications.dart';
+import 'package:spot/vendor/Navbar/vendorbottomnavigation.dart';
 import 'package:spot/vendor/screens/vendorcharityRead.dart';
 
 class VendorCharityPage extends StatefulWidget {
@@ -40,6 +40,12 @@ class _VendorCharityPageState extends State<VendorCharityPage> {
         'notification_flag': true, // To trigger the notification
       };
 
+      Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) => VendorBottomNavbar(),
+          ));
+
       // Add the request to Firestore
       await FirebaseFirestore.instance
           .collection('Charity_req')
@@ -69,14 +75,7 @@ class _VendorCharityPageState extends State<VendorCharityPage> {
           'Charity Form',
           style: GoogleFonts.spaceMono(),
         ),
-        actions: [
-          IconButton(
-              onPressed: () {
-                Navigator.push(context,
-                    MaterialPageRoute(builder: (context) => CharityRead()));
-              },
-              icon: Icon(Icons.message))
-        ],
+        automaticallyImplyLeading: false,
         centerTitle: true,
       ),
       body: Padding(

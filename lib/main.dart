@@ -2,9 +2,6 @@ import 'package:awesome_notifications/awesome_notifications.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:spot/screens/splashscreen.dart';
-import 'package:spot/screens/startingpage.dart';
-import 'package:spot/vendor/authentication/login.dart';
-import 'package:spot/vendor/screens/vendorReport.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -38,6 +35,6 @@ class MyApp extends StatelessWidget {
           useMaterial3: true,
         ),
         // home: const LoginPage()); as ventor
-        home: StartingPage());
+        home: SplashScreen());
   }
 }

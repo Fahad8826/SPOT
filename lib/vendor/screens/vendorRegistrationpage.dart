@@ -297,6 +297,7 @@ class _VendorRegistrationpageState extends State<VendorRegistrationpage> {
                           'latitude': selectedLocation.latitude,
                           'longitude': selectedLocation.longitude,
                           'timestamp': FieldValue.serverTimestamp(),
+                          'vendorId': FirebaseAuth.instance.currentUser?.uid,
                         }, SetOptions(merge: true));
 
                         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
@@ -304,7 +305,7 @@ class _VendorRegistrationpageState extends State<VendorRegistrationpage> {
                         Navigator.push(
                             context,
                             MaterialPageRoute(
-                                builder: (context) => vebdorBottomNavbar()));
+                                builder: (context) => VendorBottomNavbar()));
                       } catch (e) {
                         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
                             content: Text("Failed to save profile: $e")));

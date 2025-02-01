@@ -46,7 +46,8 @@ dependencies:
   latlong2: ^0.9.1
   awesome_notifications: ^0.10.0
   google_fonts: ^6.2.1
-  syncfusion_flutter_charts: ^28.2.3
+  fl_chart: ^0.70.2
+  
   
 
 

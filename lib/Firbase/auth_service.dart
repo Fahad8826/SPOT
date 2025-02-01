@@ -42,5 +42,13 @@ class AuthService {
     }
   }
 
-  
+
+ 
+  String getCurrentUserEmail() {
+    User? user = FirebaseAuth.instance.currentUser;
+    return user?.email ?? ''; // If the user is logged in, return email, otherwise an empty string
+  }
 }
+
+  
+

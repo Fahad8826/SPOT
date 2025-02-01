@@ -1,109 +1,109 @@
+
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:syncfusion_flutter_charts/charts.dart';
+import 'package:fl_chart/fl_chart.dart';
 import 'package:intl/intl.dart';
 
-class ShopAnalyticsData {
-  final String shopId;
-  final int viewCount;
-  final DateTime timestamp;
-
-  ShopAnalyticsData(this.shopId, this.viewCount, this.timestamp);
-}
-
-class ShopAnalyticsReport extends StatefulWidget {
-  const ShopAnalyticsReport({Key? key}) : super(key: key);
+class ShopAnalyticsDashboard extends StatefulWidget {
+  const ShopAnalyticsDashboard({Key? key}) : super(key: key);
 
   @override
-  State<ShopAnalyticsReport> createState() => _ShopAnalyticsReportState();
+  State<ShopAnalyticsDashboard> createState() => _ShopAnalyticsDashboardState();
 }
 
-class _ShopAnalyticsReportState extends State<ShopAnalyticsReport> {
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  final currentUser = FirebaseAuth.instance.currentUser;
-  List<ShopAnalyticsData> analyticsData = [];
+class _ShopAnalyticsDashboardState extends State<ShopAnalyticsDashboard> {
+  List<Map<String, dynamic>> analyticsData = [];
   bool isLoading = true;
-  String selectedTimeRange = 'Week';
+  String selectedTimeRange = 'Last 7 days';
+  List<String> timeRanges = ['Last 7 days', 'Last 30 days', 'Last 90 days'];
 
   @override
   void initState() {
     super.initState();
-    fetchAnalyticsData();
+    fetchAnalytics(7);
   }
 
-  Future<void> fetchAnalyticsData() async {
-    if (currentUser == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('User not logged in')),
-      );
-      return;
-    }
+  Future<void> fetchAnalytics(int days) async {
+    setState(() {
+      isLoading = true;
+      analyticsData.clear();
+    });
 
     try {
-      setState(() => isLoading = true);
+      print('Fetching analytics for last $days days...');
+      DateTime startDate = DateTime.now().subtract(Duration(days: days));
+      print('Start date: $startDate');
 
-      DateTime startDate = DateTime.now();
-      switch (selectedTimeRange) {
-        case 'Week':
-          startDate = startDate.subtract(const Duration(days: 7));
-          break;
-        case 'Month':
-          startDate = startDate.subtract(const Duration(days: 30));
-          break;
-        case 'Year':
-          startDate = startDate.subtract(const Duration(days: 365));
-          break;
-      }
+      // Debug print for query parameters
+      print('Querying Firestore with:');
+      print('Collection: shop_analytics');
+      print('Start date: $startDate');
 
-      var snapshot = await _firestore
+      // Fetch all analytics documents
+      QuerySnapshot analyticsSnapshot = await FirebaseFirestore.instance
           .collection('shop_analytics')
-          .where('vendorId', isEqualTo: currentUser?.uid)
           .where('timestamp', isGreaterThan: startDate)
-          .orderBy('timestamp', descending: true)
           .get();
 
+      print('Total documents fetched: ${analyticsSnapshot.docs.length}');
+
+      // Print raw data for debugging
+      for (var doc in analyticsSnapshot.docs) {
+        print('Document data: ${doc.data()}');
+      }
+
+      Map<String, Map<String, int>> dailyCounts = {};
+
+      // Process all documents
+      for (var doc in analyticsSnapshot.docs) {
+        var data = doc.data() as Map<String, dynamic>;
+        Timestamp timestamp = data['timestamp'] as Timestamp;
+        String eventType = data['eventType'] as String;
+        DateTime date = timestamp.toDate();
+        String dateStr = DateFormat('yyyy-MM-dd').format(date);
+
+        print('Processing document:');
+        print('Date: $dateStr');
+        print('Event Type: $eventType');
+
+        dailyCounts[dateStr] ??= {'views': 0, 'location_clicks': 0};
+
+        if (eventType == 'view') {
+          dailyCounts[dateStr]!['views'] =
+              (dailyCounts[dateStr]!['views'] ?? 0) + 1;
+        } else if (eventType == 'location_clicks') {
+          dailyCounts[dateStr]!['location_clicks'] =
+              (dailyCounts[dateStr]!['location_clicks'] ?? 0) + 1;
+        }
+      }
+
+      // Convert to sorted list
+      var sortedDates = dailyCounts.keys.toList()..sort();
+      analyticsData = sortedDates.map((date) {
+        var counts = dailyCounts[date]!;
+        print('Processed data for $date:');
+        print('Views: ${counts['views']}');
+        print('Location clicks: ${counts['location_clicks']}');
+
+        return {
+          'date': date,
+          'views': counts['views'] ?? 0,
+          'location_clicks': counts['location_clicks'] ?? 0,
+        };
+      }).toList();
+
+      print('Final analytics data:');
+      print(analyticsData);
+
       setState(() {
-        analyticsData = snapshot.docs.map((doc) {
-          return ShopAnalyticsData(
-            doc['shopId'],
-            doc['viewCount'],
-            (doc['timestamp'] as Timestamp).toDate(),
-          );
-        }).toList();
         isLoading = false;
       });
-    } catch (e) {
-      setState(() => isLoading = false);
-      debugPrint('Error fetching analytics: $e');
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error fetching analytics: $e')),
-      );
-    }
-  }
-
-  Future<void> incrementShopView(String shopId) async {
-    if (currentUser == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('User not logged in')),
-      );
-      return;
-    }
-
-    try {
-      await _firestore.collection('shop_analytics').add({
-        'shopId': shopId,
-        'vendorId': currentUser!.uid,
-        'viewCount': 1,
-        'timestamp': FieldValue.serverTimestamp(),
+    } catch (e, stackTrace) {
+      print('Error fetching analytics: $e');
+      print('Stack trace: $stackTrace');
+      setState(() {
+        isLoading = false;
       });
-
-      await fetchAnalyticsData();
-    } catch (e) {
-      debugPrint('Error incrementing view: $e');
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error incrementing view: $e')),
-      );
     }
   }
 
@@ -111,142 +111,230 @@ class _ShopAnalyticsReportState extends State<ShopAnalyticsReport> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Shop Analytics'),
-        backgroundColor: Colors.blue,
+        title: const Text(
+          'Shop Analytics',
+          style: TextStyle(color: Colors.amber, fontWeight: FontWeight.bold),
+        ),
+        centerTitle: true,
+        backgroundColor: Colors.black,
+        actions: [
+          // Add refresh button
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            onPressed: () {
+              int days = selectedTimeRange == 'Last 7 days'
+                  ? 7
+                  : selectedTimeRange == 'Last 30 days'
+                      ? 30
+                      : 90;
+              fetchAnalytics(days);
+            },
+          ),
+        ],
       ),
-      body: SingleChildScrollView(
-        child: isLoading
-            ? const Center(child: CircularProgressIndicator())
-            : SingleChildScrollView(
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Column(
-                    children: [
-                      _buildTimeRangeSelector(),
-                      const SizedBox(height: 20),
-                      _buildAnalyticsChart(),
-                      const SizedBox(height: 20),
-                      _buildSummaryCards(),
+      body: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                DropdownButton<String>(
+                  value: selectedTimeRange,
+                  items: timeRanges.map((String range) {
+                    return DropdownMenuItem<String>(
+                      value: range,
+                      child: Text(range),
+                    );
+                  }).toList(),
+                  onChanged: (String? newValue) {
+                    if (newValue != null) {
+                      setState(() {
+                        selectedTimeRange = newValue;
+                        switch (newValue) {
+                          case 'Last 7 days':
+                            fetchAnalytics(7);
+                            break;
+                          case 'Last 30 days':
+                            fetchAnalytics(30);
+                            break;
+                          case 'Last 90 days':
+                            fetchAnalytics(90);
+                            break;
+                        }
+                      });
+                    }
+                  },
+                ),
+                // Add debug info button
+                IconButton(
+                  icon: const Icon(Icons.info_outline),
+                  onPressed: () {
+                    showDialog(
+                      context: context,
+                      builder: (context) => AlertDialog(
+                        title: const Text('Debug Info'),
+                        content: SingleChildScrollView(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text('Data points: ${analyticsData.length}'),
+                              const SizedBox(height: 8),
+                              Text('Time range: $selectedTimeRange'),
+                              const SizedBox(height: 8),
+                              const Text('Raw data:'),
+                              Text(analyticsData.toString()),
+                            ],
+                          ),
+                        ),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.pop(context),
+                            child: const Text('Close'),
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                ),
+              ],
+            ),
+          ),
+          if (isLoading)
+            const Expanded(
+              child: Center(child: CircularProgressIndicator()),
+            )
+          else if (analyticsData.isEmpty)
+            const Expanded(
+              child: Center(
+                child: Text(
+                  'No data available\nTry viewing some shops or clicking location icons',
+                  textAlign: TextAlign.center,
+                ),
+              ),
+            )
+          else
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: LineChart(
+                  LineChartData(
+                    lineBarsData: [
+                      // Views line
+                      LineChartBarData(
+                        spots: List.generate(analyticsData.length, (index) {
+                          return FlSpot(
+                            index.toDouble(),
+                            analyticsData[index]['views'].toDouble(),
+                          );
+                        }),
+                        isCurved: true,
+                        color: Colors.blue,
+                        barWidth: 3,
+                        dotData: FlDotData(show: true),
+                      ),
+                      // Location clicks line
+                      LineChartBarData(
+                        spots: List.generate(analyticsData.length, (index) {
+                          return FlSpot(
+                            index.toDouble(),
+                            analyticsData[index]['location_clicks'].toDouble(),
+                          );
+                        }),
+                        isCurved: true,
+                        color: Colors.red,
+                        barWidth: 3,
+                        dotData: FlDotData(show: true),
+                      ),
                     ],
+                    titlesData: FlTitlesData(
+                      bottomTitles: AxisTitles(
+                        sideTitles: SideTitles(
+                          showTitles: true,
+                          getTitlesWidget: (value, meta) {
+                            if (value.toInt() >= 0 &&
+                                value.toInt() < analyticsData.length) {
+                              return Padding(
+                                padding: const EdgeInsets.all(8.0),
+                                child: Text(
+                                  DateFormat('MM/dd').format(
+                                    DateTime.parse(
+                                        analyticsData[value.toInt()]['date']),
+                                  ),
+                                  style: const TextStyle(fontSize: 10),
+                                ),
+                              );
+                            }
+                            return const Text('');
+                          },
+                          reservedSize: 30,
+                        ),
+                      ),
+                      leftTitles: AxisTitles(
+                        sideTitles: SideTitles(
+                          showTitles: true,
+                          reservedSize: 40,
+                        ),
+                      ),
+                      rightTitles: AxisTitles(
+                        sideTitles: SideTitles(showTitles: false),
+                      ),
+                      topTitles: AxisTitles(
+                        sideTitles: SideTitles(showTitles: false),
+                      ),
+                    ),
+                    gridData: FlGridData(show: true),
+                    borderData: FlBorderData(show: true),
                   ),
                 ),
               ),
-      ),
-    );
-  }
-
-  Widget _buildTimeRangeSelector() {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: ['Week', 'Month', 'Year'].map((range) {
-            return ChoiceChip(
-              label: Text(range),
-              selected: selectedTimeRange == range,
-              onSelected: (selected) {
-                if (selected) {
-                  setState(() {
-                    selectedTimeRange = range;
-                  });
-                  fetchAnalyticsData();
-                }
-              },
-            );
-          }).toList(),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildAnalyticsChart() {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: SizedBox(
-          height: 300,
-          child: SfCartesianChart(
-            primaryXAxis: DateTimeAxis(
-              dateFormat: DateFormat('MMM dd'),
-              intervalType: DateTimeIntervalType.days,
             ),
-            primaryYAxis: NumericAxis(
-              title: AxisTitle(text: 'View Count'),
+          // Stats Summary
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                _buildStatCard(
+                  'Total Views',
+                  analyticsData.fold(
+                      0, (sum, item) => sum + (item['views'] as int)),
+                  Colors.blue,
+                ),
+                _buildStatCard(
+                  'Total Location Clicks',
+                  analyticsData.fold(
+                      0, (sum, item) => sum + (item['location_clicks'] as int)),
+                  Colors.red,
+                ),
+              ],
             ),
-            // tooltipBehavior: TooltipBehavior(enable: true),
-            // series: <ChartSeries>[
-            //   LineSeries<ShopAnalyticsData, DateTime>(
-            //     dataSource: analyticsData,
-            //     xValueMapper: (ShopAnalyticsData data, _) => data.timestamp,
-            //     yValueMapper: (ShopAnalyticsData data, _) => data.viewCount,
-            //     name: 'Views',
-            //     markerSettings: const MarkerSettings(isVisible: true),
-            //   ),
-            // ],
           ),
-        ),
+        ],
       ),
     );
   }
 
-  Widget _buildSummaryCards() {
-    return GridView.builder(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      itemCount: 2,
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2,
-        childAspectRatio: 1.5,
-        crossAxisSpacing: 10,
-        mainAxisSpacing: 10,
-      ),
-      itemBuilder: (context, index) {
-        if (index == 0) {
-          return _buildSummaryCard(
-            'Total Views',
-            analyticsData.fold<int>(0, (sum, item) => sum + item.viewCount),
-            Icons.visibility,
-          );
-        } else {
-          return _buildSummaryCard(
-            'Average Views',
-            analyticsData.isEmpty
-                ? 0
-                : (analyticsData.fold<int>(
-                            0, (sum, item) => sum + item.viewCount) /
-                        analyticsData.length)
-                    .round(),
-            Icons.analytics,
-          );
-        }
-      },
-    );
-  }
-
-  Widget _buildSummaryCard(String title, int value, IconData icon) {
+  Widget _buildStatCard(String title, int value, Color color) {
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon, size: 20, color: Colors.blue),
-            const SizedBox(height: 8),
             Text(
               title,
-              style: const TextStyle(
-                fontSize: 10,
+              style: TextStyle(
+                color: color,
                 fontWeight: FontWeight.bold,
               ),
             ),
-            const SizedBox(height: 4),
+            const SizedBox(height: 8),
             Text(
               value.toString(),
               style: const TextStyle(
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
-                color: Colors.blue,
               ),
             ),
           ],

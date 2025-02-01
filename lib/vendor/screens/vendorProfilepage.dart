@@ -9,6 +9,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:spot/Firbase/auth_service.dart';
 import 'package:http/http.dart' as http;
 import 'package:spot/vendor/authentication/login.dart';
+import 'package:spot/vendor/screens/vendorReport.dart';
 
 class VendorProfilePage extends StatefulWidget {
   const VendorProfilePage({super.key});
@@ -124,7 +125,8 @@ class _VendorProfilePageState extends State<VendorProfilePage> {
         'email': _emailController.text.trim(),
         'category': _categoryController.text.trim(),
         'description': _descriptionController.text.trim(),
-        'location': _locationController,
+        'location':
+            _locationController.text.trim(), // Fixed: Get the text value
         'image': _imageUrl ?? '',
       };
 
@@ -214,8 +216,20 @@ class _VendorProfilePageState extends State<VendorProfilePage> {
         automaticallyImplyLeading: false,
         actions: [
           IconButton(
-            onPressed: _showLogoutDialog,
-            icon: const Icon(Icons.logout_rounded),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (context) => ShopAnalyticsDashboard()),
+              );
+            },
+            icon: Icon(Icons.report),
+          ),
+          IconButton(
+            onPressed: () {
+              _showLogoutDialog();
+            },
+            icon: Icon(Icons.logout),
           ),
         ],
       ),

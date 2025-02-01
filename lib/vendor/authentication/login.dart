@@ -660,7 +660,7 @@ class _LoginPageState extends State<LoginPage> {
       if (role == 'vendor') {
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => const vebdorBottomNavbar()),
+          MaterialPageRoute(builder: (context) => const VendorBottomNavbar()),
         );
       } else if (role == 'charity') {
         Navigator.pushReplacement(

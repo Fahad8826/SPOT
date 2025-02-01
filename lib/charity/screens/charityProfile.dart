@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:spot/Firbase/auth_service.dart';
 import 'package:spot/charity/authentication/charity_login.dart';
+import 'package:spot/vendor/authentication/login.dart';
 
 class Charityprofile extends StatefulWidget {
   const Charityprofile({super.key});
@@ -289,7 +290,7 @@ class _CharityprofileState extends State<Charityprofile> {
 gotologin(BuildContext context) {
   Navigator.pushAndRemoveUntil(
     context,
-    MaterialPageRoute(builder: (context) => const CharityLogin()),
+    MaterialPageRoute(builder: (context) => LoginPage()),
     (Route<dynamic> route) => false, // Remove all previous routes
   );
 }
