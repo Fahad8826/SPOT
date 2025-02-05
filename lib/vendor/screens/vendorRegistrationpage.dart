@@ -1,4 +1,5 @@
 
+
 import 'dart:convert';
 import 'dart:io';
 import 'package:flutter_map/flutter_map.dart';
@@ -19,14 +20,14 @@ class VendorRegistrationpage extends StatefulWidget {
 }
 
 class _VendorRegistrationpageState extends State<VendorRegistrationpage> {
-  final _namecontroller = TextEditingController();
-  final _emailcontroller = TextEditingController();
-  final _numbercontroller = TextEditingController();
+  final _nameController = TextEditingController();
+  final _emailController = TextEditingController();
+  final _numberController = TextEditingController();
   final _categoryController = TextEditingController();
   final _descriptionController = TextEditingController();
-  final _locationContorller = TextEditingController();
+  final _locationController = TextEditingController();
   final _searchController = TextEditingController();
-  final _formkey = GlobalKey<FormState>();
+  final _formKey = GlobalKey<FormState>();
 
   File? _image;
   LatLng selectedLocation = LatLng(10.7676, 76.6614); // Default Location
@@ -172,24 +173,27 @@ class _VendorRegistrationpageState extends State<VendorRegistrationpage> {
     }
   }
 
-  Widget _buildTextFormField(
-      TextEditingController controller, String hintText) {
+  Widget _buildTextFormField(TextEditingController controller, String hintText,
+      TextInputType inputType,
+      {String? Function(String?)? validator}) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
       child: TextFormField(
         controller: controller,
+        keyboardType: inputType,
         decoration: InputDecoration(
           hintText: hintText,
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
           ),
         ),
-        validator: (value) {
-          if (value == null || value.isEmpty) {
-            return 'Please enter $hintText';
-          }
-          return null;
-        },
+        validator: validator ??
+            (value) {
+              if (value == null || value.isEmpty) {
+                return 'Please enter $hintText';
+              }
+              return null;
+            },
       ),
     );
   }
@@ -198,14 +202,14 @@ class _VendorRegistrationpageState extends State<VendorRegistrationpage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Shop Registration'),
+        title: const Text('Shop Registration'),
         centerTitle: true,
       ),
       backgroundColor: Colors.white,
       body: Center(
         child: SingleChildScrollView(
           child: Form(
-            key: _formkey,
+            key: _formKey,
             child: Column(
               children: [
                 GestureDetector(
@@ -224,51 +228,66 @@ class _VendorRegistrationpageState extends State<VendorRegistrationpage> {
                                   size: 20, color: Colors.grey.shade600)
                               : null,
                         ),
-                        Text('     Please upload an image')
+                        const Text('     Please upload an image')
                       ],
                     ),
                   ),
                 ),
-                SizedBox(height: 20),
-                _buildTextFormField(_namecontroller, 'Shop name'),
-                _buildTextFormField(_emailcontroller, 'Email'),
-                _buildTextFormField(_numbercontroller, 'Phone Number'),
-                _buildTextFormField(_categoryController, 'Category'),
-                _buildTextFormField(_descriptionController, 'Description'),
-                Padding(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                  child: TextFormField(
-                    controller: _locationContorller,
-                    decoration: InputDecoration(
-                      hintText: "Enter Location",
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Please enter a location';
-                      }
-                      return null;
-                    },
-                  ),
+                const SizedBox(height: 20),
+                _buildTextFormField(
+                    _nameController, 'Shop name', TextInputType.text),
+                _buildTextFormField(
+                  _emailController,
+                  'Email',
+                  TextInputType.emailAddress,
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Email is required';
+                    }
+
+                    // Enforce email to have a standard length for the local part (1 to 30 characters) and end with "@gmail.com"
+                    String pattern = r'^[a-zA-Z0-9._%+-]{1,30}@gmail\.com$';
+                    RegExp regex = RegExp(pattern);
+
+                    if (!regex.hasMatch(value)) {
+                      return 'Please enter a valid @gmail.com email (1 to 30 characters before @)';
+                    }
+
+                    return null;
+                  },
                 ),
+                _buildTextFormField(
+                    _numberController, 'Phone Number', TextInputType.phone,
+                    validator: (value) {
+                  if (value == null || value.isEmpty)
+                    return 'Please enter Phone Number';
+                  if (value.length < 10) return 'Enter a valid phone number';
+                  return null;
+                }),
+                _buildTextFormField(
+                    _categoryController, 'Category', TextInputType.text),
+                _buildTextFormField(
+                    _locationController, 'Address', TextInputType.text),
+                _buildTextFormField(_descriptionController, 'Description',
+                    TextInputType.multiline,),
+                    
                 Text(
                   "Selected Location: \nLatitude: ${selectedLocation.latitude}, Longitude: ${selectedLocation.longitude}",
-                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+                  style: const TextStyle(
+                      fontSize: 14, fontWeight: FontWeight.w500),
                   textAlign: TextAlign.center,
                 ),
                 ElevatedButton(
                   onPressed: _selectLocation,
-                  child: Text('Select Location'),
+                  child: const Text('Select Location'),
                 ),
                 ElevatedButton(
                   onPressed: () async {
-                    if (_formkey.currentState!.validate()) {
+                    if (_formKey.currentState!.validate()) {
                       final user = FirebaseAuth.instance.currentUser;
                       if (user == null) {
-                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                        ScaffoldMessenger.of(context)
+                            .showSnackBar(const SnackBar(
                           content: Text("Please log in to save your profile"),
                         ));
                         return;
@@ -278,7 +297,8 @@ class _VendorRegistrationpageState extends State<VendorRegistrationpage> {
 
                       if (imageUrl == null) {
                         ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text("Failed to upload image")));
+                            const SnackBar(
+                                content: Text("Failed to upload image")));
                         return;
                       }
 
@@ -287,12 +307,12 @@ class _VendorRegistrationpageState extends State<VendorRegistrationpage> {
                             .collection('vendor_reg')
                             .doc(user.uid)
                             .set({
-                          'name': _namecontroller.text,
-                          'phone': _numbercontroller.text,
-                          'email': _emailcontroller.text,
+                          'name': _nameController.text.trim(),
+                          'phone': _numberController.text.trim(),
+                          'email': _emailController.text.trim(),
                           'category': _categoryController.text.trim(),
                           'Description': _descriptionController.text.trim(),
-                          'location': _locationContorller.text.trim(),
+                          'location': _locationController.text.trim(),
                           'image': imageUrl,
                           'latitude': selectedLocation.latitude,
                           'longitude': selectedLocation.longitude,
@@ -300,8 +320,9 @@ class _VendorRegistrationpageState extends State<VendorRegistrationpage> {
                           'vendorId': FirebaseAuth.instance.currentUser?.uid,
                         }, SetOptions(merge: true));
 
-                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                            content: Text("Profile saved successfully!")));
+                        ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                                content: Text("Profile saved successfully!")));
                         Navigator.push(
                             context,
                             MaterialPageRoute(
@@ -312,7 +333,7 @@ class _VendorRegistrationpageState extends State<VendorRegistrationpage> {
                       }
                     }
                   },
-                  child: Text('Create Shop'),
+                  child: const Text('Create Shop'),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.blueAccent,
                     foregroundColor: Colors.white,

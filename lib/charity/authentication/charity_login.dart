@@ -224,9 +224,9 @@ class AuthError {
 
 Future<(User?, AuthError?)> loginUserWithEmailAndPassword(
     String email, String password) async {
-  final FirebaseAuth _auth = FirebaseAuth.instance;
+  final FirebaseAuth auth = FirebaseAuth.instance;
   try {
-    final cred = await _auth.signInWithEmailAndPassword(
+    final cred = await auth.signInWithEmailAndPassword(
       email: email,
       password: password,
     );

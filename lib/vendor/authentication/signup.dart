@@ -1,4 +1,3 @@
-
 import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -43,7 +42,7 @@ class _SignupPageState extends State<SignupPage> {
           style: TextStyle(color: Colors.white),
         ),
         centerTitle: true,
-        backgroundColor: Colors.teal,
+        backgroundColor: Color.fromARGB(255, 5, 62, 81),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
@@ -59,7 +58,7 @@ class _SignupPageState extends State<SignupPage> {
                   style: TextStyle(
                     fontSize: 32,
                     fontWeight: FontWeight.bold,
-                    color: Colors.teal,
+                    color: Color.fromARGB(255, 5, 62, 81),
                   ),
                 ),
               ),
@@ -79,9 +78,9 @@ class _SignupPageState extends State<SignupPage> {
                         icon: Icons.person,
                       ),
                       const SizedBox(height: 16),
-                      _buildTextField(
+                      _buildemailFeild(
                         controller: _emailController,
-                        label: 'Email',
+                        Label: 'Email',
                         icon: Icons.email,
                         keyboardType: TextInputType.emailAddress,
                       ),
@@ -124,11 +123,10 @@ class _SignupPageState extends State<SignupPage> {
                       ElevatedButton(
                         onPressed: _isLoading ? null : _signup,
                         style: ElevatedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 15),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(10),
                           ),
-                          backgroundColor: Colors.teal,
+                          backgroundColor: Color.fromARGB(255, 5, 62, 81),
                         ),
                         child: _isLoading
                             ? const SizedBox(
@@ -170,7 +168,7 @@ class _SignupPageState extends State<SignupPage> {
       decoration: InputDecoration(
         labelText: label,
         labelStyle: TextStyle(color: Colors.black87),
-        prefixIcon: Icon(icon, color: Colors.teal),
+        prefixIcon: Icon(icon, color: Color.fromARGB(255, 5, 62, 81)),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10),
         ),
@@ -182,6 +180,15 @@ class _SignupPageState extends State<SignupPage> {
         if (value == null || value.isEmpty) {
           return '$label is required';
         }
+
+        // Ensure the input contains only standard characters (letters and spaces) with length between 3 and 30
+        String pattern = r'^[a-zA-Z\s]{3,30}$';
+        RegExp regex = RegExp(pattern);
+
+        if (!regex.hasMatch(value)) {
+          return '$label must contain only letters and spaces (3 to 30 characters)';
+        }
+
         return null;
       },
     );
@@ -198,10 +205,11 @@ class _SignupPageState extends State<SignupPage> {
       decoration: InputDecoration(
         labelText: label,
         labelStyle: TextStyle(color: Colors.black87),
-        prefixIcon: const Icon(Icons.lock, color: Colors.teal),
+        prefixIcon:
+            const Icon(Icons.lock, color: Color.fromARGB(255, 5, 62, 81)),
         suffixIcon: IconButton(
           icon: Icon(obscureText ? Icons.visibility : Icons.visibility_off,
-              color: Colors.teal),
+              color: Color.fromARGB(255, 5, 62, 81)),
           onPressed: onToggle,
         ),
         border: OutlineInputBorder(
@@ -218,6 +226,43 @@ class _SignupPageState extends State<SignupPage> {
         if (label == 'Password' && value.length < 6) {
           return 'Password must be at least 6 characters';
         }
+        return null;
+      },
+    );
+  }
+
+  Widget _buildemailFeild({
+    required TextEditingController controller,
+    required String Label,
+    required IconData icon,
+    TextInputType keyboardType = TextInputType.text,
+  }) {
+    return TextFormField(
+      controller: controller,
+      decoration: InputDecoration(
+        labelText: Label,
+        labelStyle: TextStyle(color: Colors.black87),
+        prefixIcon: Icon(icon, color: Color.fromARGB(255, 5, 62, 81)),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(10),
+        ),
+        filled: true,
+        fillColor: Colors.grey.shade100,
+      ),
+      keyboardType: keyboardType,
+      validator: (value) {
+        if (value == null || value.isEmpty) {
+          return 'Email is required';
+        }
+
+        // Enforce email to have a standard length for the local part (1 to 30 characters) and end with "@gmail.com"
+        String pattern = r'^[a-zA-Z0-9._%+-]{1,30}@gmail\.com$';
+        RegExp regex = RegExp(pattern);
+
+        if (!regex.hasMatch(value)) {
+          return 'Please enter a valid @gmail.com email (1 to 30 characters before @)';
+        }
+
         return null;
       },
     );

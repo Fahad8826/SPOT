@@ -276,8 +276,10 @@ class _CharityReadState extends State<CharityRead> {
                           children: [
                             Row(
                               children: [
-                                const Icon(Icons.volunteer_activism,
-                                    color: Colors.green),
+                                const Icon(
+                                  Icons.volunteer_activism,
+                                  color: Color.fromARGB(255, 5, 62, 81),
+                                ),
                                 const SizedBox(width: 8),
                                 Text(
                                   charitySnap['P_name'],
@@ -344,8 +346,8 @@ class _CharityReadState extends State<CharityRead> {
             ),
           );
         },
-        backgroundColor: Colors.green,
-        child: const Icon(Icons.add),
+        backgroundColor: Color.fromARGB(255, 5, 62, 81),
+        child: const Icon(Icons.add, color: Colors.white),
       ),
     );
   }

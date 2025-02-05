@@ -2,6 +2,9 @@ import 'package:awesome_notifications/awesome_notifications.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:spot/screens/splashscreen.dart';
+import 'package:flex_color_scheme/flex_color_scheme.dart';
+import 'package:spot/theme/app_theme.dart';
+import 'package:spot/vendor/screens/Chat-details.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -29,12 +32,11 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
         debugShowCheckedModeBanner: false,
         title: 'Spot 1',
-        theme: ThemeData(
-          colorScheme: ColorScheme.fromSeed(
-              seedColor: const Color.fromARGB(240, 27, 102, 231)),
-          useMaterial3: true,
-        ),
-        // home: const LoginPage()); as ventor
+        themeMode: ThemeMode.system,
+        theme: AppTheme.light,
+
+       
         home: SplashScreen());
+        
   }
 }

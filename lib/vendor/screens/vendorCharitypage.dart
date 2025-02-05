@@ -7,6 +7,8 @@ import 'package:spot/vendor/Navbar/vendorbottomnavigation.dart';
 import 'package:spot/vendor/screens/vendorcharityRead.dart';
 
 class VendorCharityPage extends StatefulWidget {
+  const VendorCharityPage({super.key});
+
   @override
   _VendorCharityPageState createState() => _VendorCharityPageState();
 }
@@ -82,42 +84,54 @@ class _VendorCharityPageState extends State<VendorCharityPage> {
         padding: const EdgeInsets.all(16.0),
         child: Form(
           key: _formKey,
-          child: ListView(
-            children: [
-              TextFormField(
-                controller: _productNameController,
-                decoration: InputDecoration(labelText: 'Product Name'),
-                validator: (value) =>
-                    value!.isEmpty ? 'Please enter product name' : null,
-              ),
-              SizedBox(height: 10),
-              TextFormField(
-                controller: _productDescriptionController,
-                decoration: InputDecoration(labelText: 'Product Description'),
-                maxLines: 3,
-                validator: (value) =>
-                    value!.isEmpty ? 'Please enter product description' : null,
-              ),
-              SizedBox(height: 10),
-              TextFormField(
-                controller: _quantityController,
-                decoration: InputDecoration(labelText: 'Quantity'),
-                keyboardType: TextInputType.number,
-                validator: (value) => value!.isEmpty ? 'Enter quantity' : null,
-              ),
-              SizedBox(height: 10),
-              TextFormField(
-                controller: _phoneController,
-                decoration: InputDecoration(labelText: 'Phone Number'),
-                validator: (value) =>
-                    value!.isEmpty ? 'Please enter phone number' : null,
-              ),
-              SizedBox(height: 20),
-              ElevatedButton(
-                onPressed: _submitRequest,
-                child: Text('Submit Donation Request'),
-              ),
-            ],
+          child: Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: ListView(
+              children: [
+                TextFormField(
+                  controller: _productNameController,
+                  decoration: InputDecoration(labelText: 'Product Name'),
+                  validator: (value) =>
+                      value!.isEmpty ? 'Please enter product name' : null,
+                ),
+                SizedBox(height: 10),
+                TextFormField(
+                  controller: _productDescriptionController,
+                  decoration: InputDecoration(labelText: 'Product Description'),
+                  maxLines: 3,
+                  validator: (value) => value!.isEmpty
+                      ? 'Please enter product description'
+                      : null,
+                ),
+                SizedBox(height: 10),
+                TextFormField(
+                  controller: _quantityController,
+                  decoration: InputDecoration(labelText: 'Quantity'),
+                  keyboardType: TextInputType.number,
+                  validator: (value) =>
+                      value!.isEmpty ? 'Enter quantity' : null,
+                ),
+                SizedBox(height: 10),
+                TextFormField(
+                    controller: _phoneController,
+                    decoration: InputDecoration(labelText: 'Phone Number'),
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return "Please Enter the number";
+                      }
+                      String pattern = r'^\+?[0-9]{10,12}$';
+                      RegExp regExp = RegExp(pattern);
+                      if (!RegExp(pattern).hasMatch(value)) {
+                        return 'enter a valid Phone Number';
+                      }
+                    }),
+                SizedBox(height: 20),
+                ElevatedButton(
+                  onPressed: _submitRequest,
+                  child: Text('Submit Donation Request'),
+                ),
+              ],
+            ),
           ),
         ),
       ),
